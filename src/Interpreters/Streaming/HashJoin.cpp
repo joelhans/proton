@@ -2540,6 +2540,7 @@ void HashJoin::serialize(WriteBuffer & wb) const
     DB::writeStringBinary(TableJoin::formatClauses(table_join->getClauses(), true), wb);
 
     /// Part-2: Description of left/right join stream
+    /// FIXME: Remove data stream semantic, since join processing doesn't need it
     DB::writeStringBinary(left_data.join_stream_desc->input_header.dumpStructure(), wb);
     DB::writeIntBinary<UInt16>(static_cast<UInt16>(left_data.join_stream_desc->data_stream_semantic.semantic), wb);
     DB::writeIntBinary(left_data.join_stream_desc->keep_versions, wb);
@@ -2606,17 +2607,17 @@ void HashJoin::deserialize(ReadBuffer & rb)
 
         auto left_header_str = left_data.join_stream_desc->input_header.dumpStructure();
         if (recovered_left_header_str != left_header_str
-            || static_cast<DataStreamSemantic>(recovered_left_stream_semantic) != left_data.join_stream_desc->data_stream_semantic.semantic
+            /// No need check
+            // || static_cast<DataStreamSemantic>(recovered_left_stream_semantic)
+            //     != left_data.join_stream_desc->data_stream_semantic.semantic
             || recovered_left_keep_versions != left_data.join_stream_desc->keep_versions)
             throw Exception(
                 ErrorCodes::RECOVER_CHECKPOINT_FAILED,
                 "Failed to recover hash join checkpoint. The description of left join stream are not the same, checkpointed: header={}, "
-                "semantic={}, keep_versions={}, but current: header={}, semantic={}, keep_versions={}",
+                "keep_versions={}, but current: header={}, keep_versions={}",
                 recovered_left_header_str,
-                static_cast<DataStreamSemantic>(recovered_left_stream_semantic),
                 recovered_left_keep_versions,
                 left_header_str,
-                left_data.join_stream_desc->data_stream_semantic.semantic,
                 left_data.join_stream_desc->keep_versions);
 
         String recovered_right_header_str;
@@ -2628,18 +2629,17 @@ void HashJoin::deserialize(ReadBuffer & rb)
 
         auto right_header_str = right_data.join_stream_desc->input_header.dumpStructure();
         if (recovered_right_header_str != right_header_str
-            || static_cast<DataStreamSemantic>(recovered_right_stream_semantic)
-                != right_data.join_stream_desc->data_stream_semantic.semantic
+            /// No need check
+            // || static_cast<DataStreamSemantic>(recovered_right_stream_semantic)
+            //     != right_data.join_stream_desc->data_stream_semantic.semantic
             || recovered_right_keep_versions != right_data.join_stream_desc->keep_versions)
             throw Exception(
                 ErrorCodes::RECOVER_CHECKPOINT_FAILED,
                 "Failed to recover hash join checkpoint. The description of right join stream are not the same, checkpointed: header={}, "
-                "semantic={}, keep_versions={}, but current: header={}, semantic={}, keep_versions={}",
+                "keep_versions={}, but current: header={}, keep_versions={}",
                 recovered_right_header_str,
-                static_cast<DataStreamSemantic>(recovered_right_stream_semantic),
                 recovered_right_keep_versions,
                 right_header_str,
-                right_data.join_stream_desc->data_stream_semantic.semantic,
                 right_data.join_stream_desc->keep_versions);
     }
 
