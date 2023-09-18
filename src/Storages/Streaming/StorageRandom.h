@@ -5,6 +5,7 @@
 #include <Core/Settings.h>
 #include <Storages/IStorage.h>
 #include <base/shared_ptr_helper.h>
+#include "base/types.h"
 
 
 namespace DB
@@ -13,7 +14,8 @@ namespace DB
 class ASTStorage;
 
 #define STORAGE_RANDOM_RELATED_SETTINGS(M) \
-    M(UInt64, eps, 1000, "Limits how many rows of data can be generated per window by random storages total streams", 0)
+    M(UInt64, eps, 1000, "Limits how many rows of data can be generated per second by random storages per stream (each query will generate $num_streams source by default). 0 means no maximum value", 0) \
+    M(UInt64, interval_time, 100, "the data generating interval, unit ms", 0)
 
 #define LIST_OF_STORAGE_RANDOM_SETTINGS(M) \
     STORAGE_RANDOM_RELATED_SETTINGS(M) \
@@ -60,6 +62,7 @@ public:
 private:
     UInt64 random_seed = 0;
     UInt64 events_per_second;
+    UInt64 interval_time;
 
 protected:
     StorageRandom(
@@ -67,7 +70,8 @@ protected:
         const ColumnsDescription & columns_,
         const String & comment,
         std::optional<UInt64> random_seed,
-        UInt64 events_per_second);
+        UInt64 events_per_second_,
+        UInt64 interval_time_);
 };
 
 }
