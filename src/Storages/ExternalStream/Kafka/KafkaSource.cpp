@@ -350,9 +350,9 @@ void KafkaSource::calculateColumnPositions()
 }
 
 
-/// It basically initiate a checkpoint
-/// Since the checkpoint method is called in a different thread (CheckpointCoordinator)
-/// We nee make sure it is thread safe
+/// Initiates a checkpoint
+/// Since this method is called in a different thread (CheckpointCoordinator),
+/// it must be thread-safe.
 void KafkaSource::checkpoint(CheckpointContextPtr ckpt_ctx_)
 {
     /// We assume the previous ckpt is already done
@@ -361,8 +361,8 @@ void KafkaSource::checkpoint(CheckpointContextPtr ckpt_ctx_)
     ckpt_ctx = new CheckpointContext(*ckpt_ctx_);
 }
 
-/// 1) Generate a checkpoint barrier
-/// 2) Checkpoint the sequence number just before the barrier
+/// 1) Generates a checkpoint barrier
+/// 2) Checkpoints the sequence number just before the barrier
 Chunk KafkaSource::doCheckpoint(CheckpointContextPtr ckpt_ctx_)
 {
     /// Prepare checkpoint barrier chunk

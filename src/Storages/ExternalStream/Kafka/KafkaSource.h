@@ -93,7 +93,10 @@ private:
 
         static constexpr VersionType VERSION = 0; /// Current State Version
 
-        /// For VERSION-0
+        /// NOTE: Keeping all data structure of each version.
+        /// If there are multiple versions in the future, we can achieve version compatibility more clearly
+
+        /// Data structure of VERSION-0
         const String & topic;
         Int32 partition;
         Int64 last_sn = -1;
