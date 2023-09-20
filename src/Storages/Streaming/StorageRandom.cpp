@@ -403,7 +403,7 @@ public:
 
 protected:
     Chunk generate() override
-    {   
+    {
         if (events_per_second != 0)
         {
             int is_special = index - index / interval_count * interval_count;
@@ -576,13 +576,14 @@ void registerStorageRandom(StorageFactory & factory)
         {
             storage_random_settings->loadFromQuery(*args.storage_def);
         }
-        if (storage_random_settings->eps.value == 0 || storage_random_settings->interval_time.value == 0 
-            || storage_random_settings->interval_time.value > 1000)
+
+        if (storage_random_settings->interval_time.value == 0 || storage_random_settings->interval_time.value > 1000)
         {
             throw Exception(
                 "Storage Random requires eps and interval_time to be set and interval_time should be less than 1000ms and bigger than 0ms",
                 ErrorCodes::INVALID_SETTING_VALUE);
         }
+
         return StorageRandom::create(
             args.table_id, args.columns, args.comment, random_seed, storage_random_settings->eps.value,
             storage_random_settings->interval_time.value);
@@ -636,11 +637,19 @@ Pipe StorageRandom::read(
     }
     /// Will create more seed values for each source from initial seed.
     pcg64 generate(random_seed);
-    
 
 
     if (events_per_second < num_streams)
     {
+        if (events_per_second == 0)
+        {
+            /// special case eps = 0: means no limit
+            for (size_t i = 0; i < num_streams; i++)
+            {
+                pipes.emplace_back(
+                    std::make_shared<GenerateRandomSource>(max_block_size, generate(), block_header, our_columns, context, 0, 1000));
+            }
+        }
         /// number of datas generated per second is less than the number of thread;
         for (size_t i = 0; i < events_per_second; i++) {
             pipes.emplace_back(
